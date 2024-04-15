@@ -43,6 +43,11 @@ class Window(QWidget):
         self.textF3 = QTextEdit()
         self.textF3.setReadOnly(True)
         layout.addWidget(self.textF3)
+        
+        # save to file button
+        button3 = QPushButton('Save to file')
+        button3.clicked.connect(self.saveToFile)
+        layout.addWidget(button3)
 
         self.setLayout(layout)
         self.setWindowTitle('Helper app')
@@ -75,3 +80,16 @@ class Window(QWidget):
         except ValueError as e:
             self.textF3.setPlainText(str(e))
             return
+        
+    def saveToFile(self):
+        encrypted_key= self.textF3.toPlainText()
+        encrypted_key_bytes= encrypted_key.encode("utf-8")
+
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Encrypted Private Key", "encrypted_key", "PEM Files (*.pem)")
+
+        if file_path:
+            # Write encrypted key to file
+            with open(file_path, "wb") as file:
+                file.write(encrypted_key_bytes)
+
+            print("Encrypted private key saved to:", file_path)
