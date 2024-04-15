@@ -1,5 +1,5 @@
-import asyncio
-from window import Window
+from key_window import KeyWindow
+from main_window import MainWindow
 from PyQt6.QtWidgets import QApplication
 import sys
 
@@ -7,7 +7,7 @@ import sys
 def main():
 
     app = QApplication(sys.argv)
-    window = Window()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec())
 
