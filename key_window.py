@@ -4,7 +4,7 @@ from PyQt6.QtCore import QStandardPaths
 from utils import decryptAES, encryptAES, generateRSA
 
 
-class Window(QWidget):
+class KeyWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.window_width, self.window_height = 600, 200
@@ -43,28 +43,21 @@ class Window(QWidget):
         self.textF3 = QTextEdit()
         self.textF3.setReadOnly(True)
         layout.addWidget(self.textF3)
-        
+
         # save to file button
-        button3 = QPushButton('Save to file')
-        button3.clicked.connect(self.saveToFile)
-        layout.addWidget(button3)
+        save_layout = QHBoxLayout()
+        button3 = QPushButton('Save encrypted private key')
+        button3.clicked.connect(lambda: self.saveToFile(self.textF3,'encrypted_private_key'))
+        save_layout.addWidget(button3)
+        button4 = QPushButton('Save public key')
+        button4.clicked.connect(lambda: self.saveToFile(self.textF2,'public_key'))
+        save_layout.addWidget(button4)
+        
+        layout.addLayout(save_layout)
 
         self.setLayout(layout)
         self.setWindowTitle('Helper app')
         self.show()
-
-    def chooseFile(self):
-        file_filter = 'PDF Files (*.pdf);;C++ Files (*.cpp)'
-        desktop_path = QStandardPaths.writableLocation(
-            QStandardPaths.StandardLocation.DesktopLocation)
-
-        response, _ = QFileDialog.getOpenFileName(
-            parent=self,
-            caption='Select a file',
-            directory=desktop_path,
-            filter=file_filter,
-        )
-        print(response)
 
     def generateRSA(self):
         private_key, public_key = generateRSA()
@@ -80,12 +73,13 @@ class Window(QWidget):
         except ValueError as e:
             self.textF3.setPlainText(str(e))
             return
-        
-    def saveToFile(self):
-        encrypted_key= self.textF3.toPlainText()
-        encrypted_key_bytes= encrypted_key.encode("utf-8")
 
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Encrypted Private Key", "encrypted_key", "PEM Files (*.pem)")
+    def saveToFile(self, field, name):
+        encrypted_key = field.toPlainText()
+        encrypted_key_bytes = encrypted_key.encode("utf-8")
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Save Encrypted Private Key", name, "PEM Files (*.pem)")
 
         if file_path:
             # Write encrypted key to file
