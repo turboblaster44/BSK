@@ -35,6 +35,7 @@ def decryptAES(pin, ciphertext):
     cipherbytes = bytes.fromhex(ciphertext)
     hashed_pin_bytes = hashPin(pin)
 
+    
     obj = AES.new(hashed_pin_bytes, AES.MODE_CBC, iv=IV)
     message = obj.decrypt(cipherbytes)
     message = message.rstrip(b'\x00')  # trim 0 bytes
