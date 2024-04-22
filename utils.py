@@ -1,8 +1,10 @@
 import datetime
 import os
-from Crypto.Cipher import AES,PKCS1_OAEP
+from ssl import SSLError
+from Crypto.Cipher import AES, PKCS1_v1_5
+from Crypto.Signature import pkcs1_15
 from Crypto.PublicKey import RSA
-import hashlib
+from Crypto.Hash import SHA256
 from Crypto.PublicKey.RSA import RsaKey
 import xml.etree.ElementTree as ET
 
@@ -35,7 +37,6 @@ def decryptAES(pin, ciphertext):
     cipherbytes = bytes.fromhex(ciphertext)
     hashed_pin_bytes = hashPin(pin)
 
-    
     obj = AES.new(hashed_pin_bytes, AES.MODE_CBC, iv=IV)
     message = obj.decrypt(cipherbytes)
     message = message.rstrip(b'\x00')  # trim 0 bytes
@@ -51,7 +52,7 @@ def generateRSA():
 
 def hashPin(pin):
     pin_bytes = pin.encode('utf-8')
-    hash_object = hashlib.sha256(pin_bytes)
+    hash_object = SHA256.new(pin_bytes)
     hash_hex = hash_object.digest()
     return hash_hex
 
@@ -84,7 +85,7 @@ def is_rsa_private_key(file_contents):
         return False
 
 
-def createSignature(file_path, private_key):
+def create_signature(file_path, private_key):
     file_size = os.path.getsize(file_path)
     file_extension = os.path.splitext(file_path)[-1]
     file_modified_date = str(
@@ -94,11 +95,15 @@ def createSignature(file_path, private_key):
     username = os.getenv('USERNAME')  # For Windows
 
     with open(file_path, 'rb') as f:
-        file_hash = hashlib.sha256(f.read()).digest()
+        file_hash = SHA256.new(f.read())
+        print('generating: not encrypted hash')
+        print(file_hash.digest().hex())
         rsa_key = RSA.import_key(private_key)
-        cipher_rsa = PKCS1_OAEP.new(rsa_key)
-        encrypted_file_hash = cipher_rsa.encrypt(file_hash).hex()
-
+        cipher_rsa = pkcs1_15.new(rsa_key)
+        encrypted_file_hash = cipher_rsa.sign(file_hash).hex()
+    print('generating')
+    print(encrypted_file_hash)
+    
     root = ET.Element("XAdESSignature")
     file_info = ET.SubElement(root, "FileInfo")
     user_info = ET.SubElement(root, "UserInfo")
@@ -111,4 +116,26 @@ def createSignature(file_path, private_key):
     tree = ET.ElementTree(root)
     return tree
 
-    
+
+def verify_signature(xml_file_path, file_path, public_key_str):
+    tree = ET.parse(xml_file_path)
+    root = tree.getroot()
+
+    hash_element = root.find(".//FileHash")
+    if hash_element is None:
+        raise ValueError("Hash element not found in the XML file")
+
+    # Extract the hash value
+    encrypted_xml_hash = hash_element.text
+    encrypted_xml_hash_bytes = bytes.fromhex(encrypted_xml_hash)
+
+    with open(file_path, 'rb') as f:
+        file_hash = SHA256.new(f.read())
+        
+    public_key = RSA.import_key(public_key_str)
+    try:
+        pkcs1_15.new(public_key).verify(file_hash, encrypted_xml_hash_bytes)
+        return True
+    except Exception as e:
+        print(e)
+        return False

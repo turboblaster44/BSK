@@ -1,8 +1,9 @@
+import os
 from PyQt6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QFileDialog, QVBoxLayout, QTextEdit, QLineEdit, QInputDialog, QLabel
 from PyQt6.QtCore import QStandardPaths
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-from utils import createSignature, decryptAES, is_rsa_private_key, is_rsa_public_key
+from utils import create_signature, decryptAES, is_rsa_private_key, is_rsa_public_key, verify_signature
 
 
 class MainWindow(QWidget):
@@ -68,7 +69,7 @@ class MainWindow(QWidget):
         signature_layout.addWidget(button_sign)
 
         button_verify = QPushButton("verify signature")
-        # button_verify.clicked.connect(self.generate_signature)
+        button_verify.clicked.connect(self.verify_signature)
         signature_layout.addWidget(button_verify)
 
         layout.addLayout(signature_layout)
@@ -106,6 +107,9 @@ class MainWindow(QWidget):
         if self.file_input.text() == '':
             self.show_error("You need to load a file first")
             return
+        if os.path.splitext(self.file_input.text())[-1] != '.bin':
+            self.show_error("You need to specify a .bin file")
+            return
         if self.private_key == None:
             self.show_error("You need to load private key first")
             return
@@ -119,8 +123,8 @@ class MainWindow(QWidget):
             decrypted_bytes = cipher_rsa.decrypt(ciphertext)
 
             # Write the decrypted content to the output file
-            self.saveToFile(decrypted_bytes, 'decrypted_file', 'save decrypted file'
-                            "c++ files (*.cpp)")
+            self.saveToFile(decrypted_bytes, 'decrypted_file',
+                            'save decrypted file', filter=None)
 
         except Exception as e:
             self.show_error("Unexpected error occured")
@@ -206,8 +210,28 @@ class MainWindow(QWidget):
         if self.private_key == None:
             self.show_error("You need to load private key first")
             return
-        tree = createSignature(self.file_input.text(), self.private_key)
+        tree = create_signature(self.file_input.text(), self.private_key)
         file_path, _ = QFileDialog.getSaveFileName(
             self, 'save signature', 'signature', 'XML files (*.xml)')
+        try:
+            tree.write(file_path, encoding="utf-8", xml_declaration=True)
+        except Exception as e:
+            print(e)
 
-        tree.write(file_path, encoding="utf-8", xml_declaration=True)
+    def verify_signature(self):
+        if self.file_input.text() == '':
+            self.show_error("You need to load a file first")
+            return
+        if self.private_key == self.public_key:
+            self.show_error("You need to load public key first")
+            return
+        xml_file_path = self.chooseFile('XML files (*.xml)')
+        try:
+            if verify_signature(
+                    xml_file_path, self.file_input.text(), self.public_key,self.private_key):
+                self.show_valid("Signature good :)")
+            else:
+                self.show_error("Signature bad >:(")
+        except ValueError as e:
+            self.show_error("Hash element not found in the XML file")
+            print(e)
