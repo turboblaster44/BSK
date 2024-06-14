@@ -32,7 +32,7 @@ class KeyWindow(QWidget):
         # Create a horizontal layout for the small text input and button
         input_layout = QHBoxLayout()
         self.text_input = QLineEdit()
-        self.text_input.setPlaceholderText("Enter 16 character PIN string")
+        self.text_input.setPlaceholderText("Enter PIN")
         input_layout.addWidget(self.text_input)
         button2 = QPushButton('Encrypt')
         button2.clicked.connect(self.encrypt)
@@ -87,3 +87,6 @@ class KeyWindow(QWidget):
                 file.write(encrypted_key_bytes)
 
             print("Encrypted private key saved to:", file_path)
+
+
+    
