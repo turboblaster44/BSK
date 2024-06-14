@@ -23,6 +23,5 @@ def run_main():
     window.show()
     sys.exit(app.exec())
 if __name__ == '__main__':
-    run_main()
-    # assert len(sys.argv) == 2, "Only 1 argument is taken ('key' or 'main')"
-    # main()
+    assert len(sys.argv) == 2, "Only 1 argument is taken ('key' or 'main')"
+    main()
