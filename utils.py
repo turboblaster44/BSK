@@ -59,7 +59,6 @@ def hashPin(pin):
 
 def is_rsa_public_key(file_contents):
     try:
-        # Attempt to parse the file contents as an RSA key
         rsa_key = RSA.import_key(file_contents)
         # Check if the parsed key is a public key
         if isinstance(rsa_key, RsaKey) and rsa_key.has_private():
@@ -96,13 +95,9 @@ def create_signature(file_path, private_key):
 
     with open(file_path, 'rb') as f:
         file_hash = SHA256.new(f.read())
-        print('generating: not encrypted hash')
-        print(file_hash.digest().hex())
         rsa_key = RSA.import_key(private_key)
         cipher_rsa = pkcs1_15.new(rsa_key)
         encrypted_file_hash = cipher_rsa.sign(file_hash).hex()
-    print('generating')
-    print(encrypted_file_hash)
     
     root = ET.Element("XAdESSignature")
     file_info = ET.SubElement(root, "FileInfo")

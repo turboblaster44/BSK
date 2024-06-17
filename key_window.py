@@ -47,12 +47,16 @@ class KeyWindow(QWidget):
         # save to file button
         save_layout = QHBoxLayout()
         button3 = QPushButton('Save encrypted private key')
-        button3.clicked.connect(lambda: self.saveToFile(self.textF3,'encrypted_private_key'))
+        button3.clicked.connect(lambda: self.saveToFile(
+            'Save Encrypted Private Key',
+            self.textF3, 'encrypted_private_key'))
         save_layout.addWidget(button3)
         button4 = QPushButton('Save public key')
-        button4.clicked.connect(lambda: self.saveToFile(self.textF2,'public_key'))
+        button4.clicked.connect(lambda: self.saveToFile(
+            'Save public key',
+            self.textF2, 'public_key'))
         save_layout.addWidget(button4)
-        
+
         layout.addLayout(save_layout)
 
         self.setLayout(layout)
@@ -74,19 +78,14 @@ class KeyWindow(QWidget):
             self.textF3.setPlainText(str(e))
             return
 
-    def saveToFile(self, field, name):
+    def saveToFile(self, message, field, name):
         encrypted_key = field.toPlainText()
         encrypted_key_bytes = encrypted_key.encode("utf-8")
 
         file_path, _ = QFileDialog.getSaveFileName(
-            self, "Save Encrypted Private Key", name, "PEM Files (*.pem)")
+            self, message, name, "PEM Files (*.pem)")
 
         if file_path:
             # Write encrypted key to file
             with open(file_path, "wb") as file:
                 file.write(encrypted_key_bytes)
-
-            print("Encrypted private key saved to:", file_path)
-
-
-    

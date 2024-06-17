@@ -17,11 +17,6 @@ def main():
     window.show()
     sys.exit(app.exec())
 
-def run_main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
 if __name__ == '__main__':
     assert len(sys.argv) == 2, "Only 1 argument is taken ('key' or 'main')"
     main()
